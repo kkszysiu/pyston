@@ -297,6 +297,24 @@ extern "C" Box* floatMod(BoxedFloat* lhs, Box* rhs) {
     }
 }
 
+extern "C" Box* floatDivmod(BoxedFloat* lhs, Box* rhs) {
+    assert(lhs->cls == float_cls);
+    Box* divResult = floatDiv(lhs, rhs);
+
+    if (divResult == NotImplemented) {
+        return NotImplemented;
+    }
+
+    Box* modResult = floatMod(lhs, rhs);
+
+    if (modResult == NotImplemented) {
+        return NotImplemented;
+    }
+
+    Box* arg[2] = { divResult, modResult };
+    return createTuple(2, arg);
+}
+
 extern "C" Box* floatRModFloat(BoxedFloat* lhs, BoxedFloat* rhs) {
     assert(lhs->cls == float_cls);
     assert(rhs->cls == float_cls);
@@ -576,6 +594,7 @@ void setupFloat() {
     _addFunc("__rmod__", BOXED_FLOAT, (void*)floatRModFloat, (void*)floatRModInt, (void*)floatRMod);
     _addFunc("__mul__", BOXED_FLOAT, (void*)floatMulFloat, (void*)floatMulInt, (void*)floatMul);
     float_cls->giveAttr("__rmul__", float_cls->getattr("__mul__"));
+    float_cls->giveAttr("__divmod__", new BoxedFunction(boxRTFunction((void*)floatDivmod, BOXED_TUPLE, 2)));
 
     _addFunc("__pow__", BOXED_FLOAT, (void*)floatPowFloat, (void*)floatPowInt, (void*)floatPow);
     _addFunc("__sub__", BOXED_FLOAT, (void*)floatSubFloat, (void*)floatSubInt, (void*)floatSub);

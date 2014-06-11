@@ -344,6 +344,7 @@ Box* hash_obj = NULL;
 Box* abs_obj = NULL;
 Box* min_obj = NULL;
 Box* max_obj = NULL;
+Box* divmod_obj = NULL;
 Box* open_obj = NULL;
 Box* chr_obj = NULL;
 Box* ord_obj = NULL;

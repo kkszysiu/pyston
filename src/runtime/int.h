@@ -39,6 +39,7 @@ extern "C" i1 ge_i64_i64(i64 lhs, i64 rhs);
 extern "C" Box* intAdd(BoxedInt* lhs, Box* rhs);
 extern "C" Box* intAnd(BoxedInt* lhs, Box* rhs);
 extern "C" Box* intDiv(BoxedInt* lhs, Box* rhs);
+extern "C" Box* intDivmod(BoxedInt* lhs, Box* rhs);
 extern "C" Box* intEq(BoxedInt* lhs, Box* rhs);
 extern "C" Box* intNe(BoxedInt* lhs, Box* rhs);
 extern "C" Box* intLt(BoxedInt* lhs, Box* rhs);

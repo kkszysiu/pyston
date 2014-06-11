@@ -23,6 +23,7 @@ extern "C" double pow_float_float(double lhs, double rhs);
 
 class BoxedFloat;
 bool floatNonzeroUnboxed(BoxedFloat* self);
+extern "C" Box* floatDivmod(BoxedFloat* lhs, Box* rhs);
 }
 
 #endif

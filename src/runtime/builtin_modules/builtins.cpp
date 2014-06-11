@@ -26,6 +26,8 @@
 #include "runtime/types.h"
 #include "runtime/util.h"
 #include "runtime/list.h"
+#include "runtime/int.h"
+#include "runtime/float.h"
 namespace pyston {
 
 extern "C" Box* trap() {
@@ -74,6 +76,33 @@ extern "C" Box* dir(Box* obj) {
         }
     }
     return result;
+}
+
+extern "C" Box* divmod(Box* lhs, Box* rhs) {
+    if (lhs->cls != int_cls && lhs->cls != float_cls) {
+        raiseExcHelper(TypeError, "unsupported operand type(s) for divmod()");
+    }
+    if (rhs->cls != int_cls && rhs->cls != float_cls) {
+        raiseExcHelper(TypeError, "unsupported operand type(s) for divmod()");
+    }
+
+    if (lhs->cls == float_cls || rhs->cls == float_cls) {
+//         if(lhs->cls == int_cls) {
+//             lhs = boxFloat(static_cast<BoxedInt*>(lhs)->n + static_cast<BoxedFloat*>(lhs)->d);
+//         };
+//         if(rhs->cls == int_cls) {
+//             rhs = boxFloat(static_cast<BoxedInt*>(rhs)->n + static_cast<BoxedFloat*>(rhs)->d);
+//         };
+
+        printf("floatDivmod(%f, %f);\n", static_cast<BoxedFloat*>(lhs)->d, static_cast<BoxedFloat*>(rhs)->d);
+        //return floatDivmod(static_cast<BoxedFloat*>(lhs), static_cast<BoxedFloat*>(rhs));
+        
+        lhs->cls = float_cls;
+        return floatDivmod(static_cast<BoxedFloat*>(lhs), boxFloat(static_cast<BoxedFloat*>(rhs)->d));
+    } else {
+        printf("intDivmod\n");
+        return intDivmod(static_cast<BoxedInt*>(lhs), static_cast<BoxedInt*>(rhs));
+    }
 }
 
 extern "C" Box* abs_(Box* x) {
@@ -474,6 +503,8 @@ void setupBuiltins() {
 
     builtins_module->giveAttr("sum",
                               new BoxedFunction(boxRTFunction((void*)sum, UNKNOWN, 2, 1, false, false), { boxInt(0) }));
+    divmod_obj = new BoxedFunction(boxRTFunction((void*)divmod, UNKNOWN, 2, 1, false, false), { boxInt(0) });
+    builtins_module->giveAttr("divmod", divmod_obj);
 
     chr_obj = new BoxedFunction(boxRTFunction((void*)chr, STR, 1));
     builtins_module->giveAttr("chr", chr_obj);
