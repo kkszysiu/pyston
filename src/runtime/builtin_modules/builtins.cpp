@@ -18,6 +18,7 @@
 #include "codegen/compvars.h"
 #include "core/ast.h"
 #include "core/types.h"
+#include "core/double_conversion/double-conversion.h"
 #include "gc/collector.h"
 #include "runtime/gc_runtime.h"
 #include "runtime/inline/xrange.h"
@@ -175,6 +176,61 @@ extern "C" Box* sum(Box* container, Box* initial) {
         cur = binopInternal(cur, e, AST_TYPE::Add, false, NULL);
     }
     return cur;
+}
+
+Box* round(Box* number, Box* ndigits) {
+    if (ndigits->cls != int_cls) {
+        raiseExcHelper(TypeError, "'%s' object cannot be interpreted as an index", getTypeName(ndigits)->c_str());
+    }
+
+    int nplaces = static_cast<BoxedInt*>(ndigits)->n;
+    float rounded;
+    double float_val;
+
+    const int kBufferSize = 128;
+    char buffer[kBufferSize];
+
+    int processed;
+
+
+    int dts_flags = double_conversion::DoubleToStringConverter::EMIT_POSITIVE_EXPONENT_SIGN |
+        double_conversion::DoubleToStringConverter::EMIT_TRAILING_DECIMAL_POINT |
+        double_conversion::DoubleToStringConverter::EMIT_TRAILING_ZERO_AFTER_POINT;
+    int std_flags = double_conversion::StringToDoubleConverter::NO_FLAGS;
+    double_conversion::StringBuilder builder(buffer, kBufferSize);
+
+
+    if (number->cls == int_cls) {
+        float_val = static_cast<BoxedInt*>(number)->n;
+    } else if (number->cls == float_cls) {
+        float_val = static_cast<BoxedFloat*>(number)->d;
+    } else {
+        raiseExcHelper(TypeError, "a float is required");
+    }
+
+    if (nplaces == 0) {
+        rounded = std::round(float_val);
+        if (fabs(rounded - float_val) == 0.5)
+            /* halfway between two integers; use round-away-from-zero */
+            rounded = float_val + (float_val > 0.0 ? 0.5 : -0.5);
+        return boxFloat(rounded);
+    }
+
+    double_conversion::DoubleToStringConverter dc(dts_flags, "Infinity", "NaN", 'e',
+                                0, 0, 0, 0);  // Padding zeroes.
+    builder.Reset();
+    dc.ToFixed(float_val, nplaces, &builder);
+    const char *fixed_val = builder.Finalize();
+
+    double_conversion::StringToDoubleConverter converter(std_flags, 0.0, 1.0, "infinity", "NaN");
+
+    double rval = converter.StringToDouble(fixed_val, strlen(fixed_val), &processed);
+    printf("float_val: %f\n", float_val);
+    printf("StringToFloat: %s\n", fixed_val);
+    printf("processed: %i\n", processed);
+
+    printf("rval: %f\n", rval);
+    return boxFloat(rval);
 }
 
 Box* open(Box* arg1, Box* arg2) {
@@ -475,6 +531,10 @@ void setupBuiltins() {
 
     builtins_module->giveAttr("sum",
                               new BoxedFunction(boxRTFunction((void*)sum, UNKNOWN, 2, 1, false, false), { boxInt(0) }));
+    round_obj = new BoxedFunction(boxRTFunction((void*)round, UNKNOWN, 2, 1, false, false),
+                                 { boxInt(0) });
+    builtins_module->giveAttr("round", round_obj);
+
 
     chr_obj = new BoxedFunction(boxRTFunction((void*)chr, STR, 1));
     builtins_module->giveAttr("chr", chr_obj);
