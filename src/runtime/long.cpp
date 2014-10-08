@@ -95,24 +95,6 @@ extern "C" PyObject* PyLong_FromUnsignedLong(unsigned long ival) {
 }
 
 extern "C" PyObject* PyLong_FromVoidPtr(void *p) {
-// TODO
-
-// For systems where SIZEOF_VOID_P is not defined, determine it
-// based on __LP64__ (defined by gcc on 64-bit systems)
-#if !defined(SIZEOF_VOID_P)
-# if defined(__LP64__)
-#  define SIZEOF_VOID_P 8
-# else
-#  define SIZEOF_VOID_P 4
-# endif
-#endif
-
-/* The size of `long', as computed by sizeof. */
-#define SIZEOF_LONG 8
-
-/* The size of `long long', as computed by sizeof. */
-#define SIZEOF_LONG_LONG 8
-
 #if SIZEOF_VOID_P <= SIZEOF_LONG
     if ((long)p < 0)
         return PyLong_FromUnsignedLong((unsigned long)p);
