@@ -36,6 +36,11 @@ extern "C" double PyFloat_AsDouble(PyObject* o) {
     return 0.0;
 }
 
+extern "C" PyObject * PyFloat_FromString(PyObject* o, char** junk) {
+    BoxedString *bstr = static_cast<BoxedString*>(o);
+    return boxFloat((double)std::atof(bstr->s.c_str()));
+}
+
 template <typename T> static inline void raiseDivZeroExcIfZero(T var) {
     if (var == 0) {
         raiseExcHelper(ZeroDivisionError, "float division by zero");

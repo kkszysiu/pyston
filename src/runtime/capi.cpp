@@ -102,6 +102,32 @@ extern "C" PyObject* PyDict_New() {
     return new BoxedDict();
 }
 
+extern "C" int PyDict_Contains(PyObject *mp, PyObject *_key) {
+    BoxedDict* b = static_cast<BoxedDict*>(mp);
+    Box* key = static_cast<Box*>(_key);
+
+    return b->d.count(key) != 0;
+}
+
+extern "C" int PyDict_DelItem(PyObject *mp, PyObject *_key) {
+    BoxedDict* b = static_cast<BoxedDict*>(mp);
+    Box* key = static_cast<Box*>(_key);
+
+    auto it = b->d.find(key);
+    if (it == b->d.end()) {
+        BoxedString* s = reprOrNull(key);
+
+        if (s)
+            return -1;
+        else
+            return -1;
+    }
+
+    b->d.erase(it);
+
+    return 0;
+}
+
 extern "C" int PyDict_SetItem(PyObject* mp, PyObject* _key, PyObject* _item) {
     Box* b = static_cast<Box*>(mp);
     Box* key = static_cast<Box*>(_key);
@@ -253,7 +279,7 @@ extern "C" int PyType_Ready(PyTypeObject* cls) {
     RELEASE_ASSERT(cls->tp_dict == NULL, "");
     RELEASE_ASSERT(cls->tp_descr_get == NULL, "");
     RELEASE_ASSERT(cls->tp_descr_set == NULL, "");
-    RELEASE_ASSERT(cls->tp_init == NULL, "");
+    //RELEASE_ASSERT(cls->tp_init == NULL, "");
     RELEASE_ASSERT(cls->tp_alloc == NULL, "");
     RELEASE_ASSERT(cls->tp_free == NULL || cls->tp_free == PyObject_Del, "");
     RELEASE_ASSERT(cls->tp_is_gc == NULL, "");
@@ -386,8 +412,6 @@ extern "C" void _PyErr_BadInternalCall(const char* filename, int lineno) {
     Py_FatalError("unimplemented");
 }
 
-typedef PyTypeObject PyCFunction_Type;
-
 extern "C" PyCFunction PyCFunction_GetFunction(PyObject* o) {
     Py_FatalError("unimplemented");
 }
@@ -410,6 +434,10 @@ extern "C" PyObject* PyObject_Init(PyObject* op, PyTypeObject* tp) {
     initUserAttrs(op, tp);
 
     return op;
+}
+
+extern "C" PyObject* PyObject_Repr(PyObject *o) {
+    Py_FatalError("unimplemented");
 }
 
 extern "C" PyVarObject* PyObject_InitVar(PyVarObject* op, PyTypeObject* tp, Py_ssize_t size) {
@@ -705,6 +733,10 @@ extern "C" void PyErr_Clear() {
 
 extern "C" void PyErr_SetString(PyObject* exception, const char* string) {
     PyErr_SetObject(exception, boxStrConstant(string));
+}
+
+extern "C" void PyErr_SetNone(PyObject* exception) {
+    PyErr_SetObject(exception, None);
 }
 
 extern "C" void PyErr_SetObject(PyObject* exception, PyObject* value) {

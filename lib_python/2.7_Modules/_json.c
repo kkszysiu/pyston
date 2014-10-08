@@ -27,6 +27,10 @@ typedef int Py_ssize_t;
 #define PyEncoder_Check(op) PyObject_TypeCheck(op, &PyEncoderType)
 #define PyEncoder_CheckExact(op) (Py_TYPE(op) == &PyEncoderType)
 
+PyTypeObject PyDict_Type;
+PyTypeObject PyCFunction_Type;
+
+
 static PyTypeObject PyScannerType;
 static PyTypeObject PyEncoderType;
 

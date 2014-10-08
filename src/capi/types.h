@@ -66,4 +66,12 @@ public:
 };
 }
 
+//extern "C" typedef PyObject PyCFunction_Type;
+//typedef PyTypeObject PyCFunction_Type;
+
+//extern PyTypeObject PyCFunction_Type;
+//extern PyTypeObject PyDict_Type;
+//#define PyCFunction_Type PyTypeObject;
+//#define PyDict_Type BoxedDict;
+
 #endif

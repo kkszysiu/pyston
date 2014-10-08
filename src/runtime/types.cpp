@@ -42,6 +42,7 @@ extern "C" void init_sre();
 extern "C" void initmath();
 extern "C" void initoperator();
 extern "C" void initbinascii();
+extern "C" void init_json();
 
 namespace pyston {
 
@@ -824,6 +825,7 @@ void setupRuntime() {
     initmath();
     initoperator();
     initbinascii();
+    init_json();
 
     setupSysEnd();
 

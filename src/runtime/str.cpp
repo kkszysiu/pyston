@@ -955,6 +955,10 @@ extern "C" PyObject* PyString_FromString(const char* s) {
     return boxStrConstant(s);
 }
 
+extern "C" PyObject* PyString_InternFromString(const char* s) {
+    return boxStrConstant(s);
+}
+
 BoxedString* createUninitializedString(ssize_t n) {
     // I *think* this should avoid doing any copies, by using move constructors:
     return new BoxedString(std::string(n, '\x00'));

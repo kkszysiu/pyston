@@ -35,4 +35,21 @@
 #define Py_USING_UNICODE 1
 #define Py_UNICODE_SIZE 4
 
+// For systems where SIZEOF_VOID_P is not defined, determine it
+// based on __LP64__ (defined by gcc on 64-bit systems)
+#if !defined(SIZEOF_VOID_P)
+# if defined(__LP64__)
+#  define SIZEOF_VOID_P 8
+# else
+#  define SIZEOF_VOID_P 4
+# endif
+#endif
+
+/* The size of `long', as computed by sizeof. */
+#define SIZEOF_LONG 8
+
+/* The size of `long long', as computed by sizeof. */
+#define SIZEOF_LONG_LONG 8
+
+
 #endif /*Py_PYCONFIG_H*/
