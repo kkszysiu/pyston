@@ -223,5 +223,68 @@ extern "C" int _PyArg_NoKeywords(const char* funcname, PyObject* kw) {
     return 0;
 }
 
+/* PyOS_string_to_double is the recommended replacement for the deprecated
+   PyOS_ascii_strtod and PyOS_ascii_atof functions.  It converts a
+   null-terminated byte string s (interpreted as a string of ASCII characters)
+   to a float.  The string should not have leading or trailing whitespace (in
+   contrast, PyOS_ascii_strtod allows leading whitespace but not trailing
+   whitespace).  The conversion is independent of the current locale.
+
+   If endptr is NULL, try to convert the whole string.  Raise ValueError and
+   return -1.0 if the string is not a valid representation of a floating-point
+   number.
+
+   If endptr is non-NULL, try to convert as much of the string as possible.
+   If no initial segment of the string is the valid representation of a
+   floating-point number then *endptr is set to point to the beginning of the
+   string, -1.0 is returned and again ValueError is raised.
+
+   On overflow (e.g., when trying to convert '1e500' on an IEEE 754 machine),
+   if overflow_exception is NULL then +-Py_HUGE_VAL is returned, and no Python
+   exception is raised.  Otherwise, overflow_exception should point to a
+   a Python exception, this exception will be raised, -1.0 will be returned,
+   and *endptr will point just past the end of the converted value.
+
+   If any other failure occurs (for example lack of memory), -1.0 is returned
+   and the appropriate Python exception will have been set.
+*/
+
+extern "C" double PyOS_string_to_double(const char *s, char **endptr, PyObject *overflow_exception) {
+    double x, result = -1.0;
+    char *fail_pos;
+
+    errno = 0;
+    PyFPE_START_PROTECT("PyOS_string_to_double", return -1.0)
+    //x = _PyOS_ascii_strtod(s, &fail_pos);
+    x = strtod(s, &fail_pos);
+    PyFPE_END_PROTECT(x)
+
+    if (errno == ENOMEM) {
+        PyErr_NoMemory();
+        fail_pos = (char *)s;
+    }
+    else if (!endptr && (fail_pos == s || *fail_pos != '\0'))
+        PyErr_Format(PyExc_ValueError,
+                      "could not convert string to float: "
+                      "%.200s", s);
+    else if (fail_pos == s)
+        PyErr_Format(PyExc_ValueError,
+                      "could not convert string to float: "
+                      "%.200s", s);
+    else if (errno == ERANGE && fabs(x) >= 1.0 && overflow_exception)
+        PyErr_Format(overflow_exception,
+                      "value too large to convert to float: "
+                      "%.200s", s);
+    else
+        result = x;
+
+    if (endptr != NULL)
+        *endptr = fail_pos;
+    return result;
+}
+
+
+
+
 
 } // namespace pyston

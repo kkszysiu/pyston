@@ -58,12 +58,14 @@
 
 #include "pyerrors.h"
 
+#include "ceval.h"
 #include "modsupport.h"
 #include "import.h"
 
 #include "abstract.h"
 
 #include "pyctype.h"
+#include "pystrtod.h"
 
 // directly from CPython:
 /* Argument must be a char or an int in [-128, 127] or [0, 255]. */

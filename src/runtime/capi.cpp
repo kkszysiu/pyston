@@ -142,6 +142,12 @@ extern "C" PyObject* PyType_GenericAlloc(PyTypeObject* cls, Py_ssize_t nitems) {
     return rtn;
 }
 
+extern "C" PyObject * PyType_GenericNew(PyTypeObject *type, PyObject *args, PyObject *kwds)
+{
+    return type->tp_alloc(type, 0);
+}
+
+
 BoxedClass* wrapperdescr_cls, *wrapperobject_cls;
 struct wrapper_def {
     const char* name;
@@ -380,6 +386,12 @@ extern "C" void _PyErr_BadInternalCall(const char* filename, int lineno) {
     Py_FatalError("unimplemented");
 }
 
+typedef PyTypeObject PyCFunction_Type;
+
+extern "C" PyCFunction PyCFunction_GetFunction(PyObject* o) {
+    Py_FatalError("unimplemented");
+}
+
 extern "C" PyObject* PyObject_Init(PyObject* op, PyTypeObject* tp) {
     RELEASE_ASSERT(op, "");
     RELEASE_ASSERT(tp, "");
@@ -466,6 +478,14 @@ extern "C" PyObject* PyObject_CallObject(PyObject* obj, PyObject* args) {
     }
 }
 
+extern "C" PyObject* PyObject_CallFunction(PyObject *callable_object, char *format, ...) {
+    Py_FatalError("unimplemented");
+}
+
+extern "C" PyObject* PyObject_CallFunctionObjArgs(PyObject *callable, ...) {
+    Py_FatalError("unimplemented");
+}
+
 extern "C" PyObject* PyObject_CallMethod(PyObject* o, char* name, char* format, ...) {
     Py_FatalError("unimplemented");
 }
@@ -481,6 +501,14 @@ extern "C" PyObject* PyObject_GetAttrString(PyObject* o, const char* attr) {
 
     try {
         return getattr(o, attr);
+    } catch (Box* b) {
+        Py_FatalError("unimplemented");
+    }
+}
+
+extern "C" PyObject* PyObject_Str(PyObject* o) {
+    try {
+        return static_cast<BoxedString*>(o);
     } catch (Box* b) {
         Py_FatalError("unimplemented");
     }
@@ -725,6 +753,15 @@ extern "C" PyObject* PyImport_Import(PyObject* module_name) {
     }
 }
 
+extern "C" PyObject* PyImport_ImportModule(const char *name) {
+    RELEASE_ASSERT(name, "");
+
+    try {
+        return import(-1, None, new std::string(name));
+    } catch (Box* e) {
+        Py_FatalError("unimplemented");
+    }
+}
 
 extern "C" PyObject* PyCallIter_New(PyObject* callable, PyObject* sentinel) {
     Py_FatalError("unimplemented");
