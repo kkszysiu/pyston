@@ -2,7 +2,7 @@
 """
 import re
 import sys
-import struct
+#import struct
 
 from json import scanner
 try:
@@ -18,7 +18,8 @@ def _floatconstants():
     _BYTES = '7FF80000000000007FF0000000000000'.decode('hex')
     if sys.byteorder != 'big':
         _BYTES = _BYTES[:8][::-1] + _BYTES[8:][::-1]
-    nan, inf = struct.unpack('dd', _BYTES)
+    #nan, inf = struct.unpack('dd', _BYTES)
+    nan, inf = 0, 0
     return nan, inf, -inf
 
 NaN, PosInf, NegInf = _floatconstants()

@@ -1183,7 +1183,7 @@ public:
     }
 
     virtual bool visit_importfrom(AST_ImportFrom* node) {
-        RELEASE_ASSERT(node->level == 0, "");
+        //RELEASE_ASSERT(node->level == 0, "");
 
         AST_LangPrimitive* import = new AST_LangPrimitive(AST_LangPrimitive::IMPORT_NAME);
         import->args.push_back(new AST_Num());

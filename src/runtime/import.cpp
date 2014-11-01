@@ -38,14 +38,29 @@ BoxedModule* createAndRunModule(const std::string& name, const std::string& fn) 
 #define LLVM_SYS_FS_EXISTS_CODE_OKAY(code) (!(code))
 #endif
 
+static bool isFileExists(std::string joined_path) {
+    bool exists;
+#if LLVMREV < 217625
+    llvm_error_code code = llvm::sys::fs::exists(joined_path, exists);
+    assert(LLVM_SYS_FS_EXISTS_CODE_OKAY(code));
+#else
+    exists = llvm::sys::fs::exists(joined_path);
+#endif
+    return exists;
+}
+
 static Box* importSub(const std::string* name, Box* parent_module) {
     BoxedList* path_list;
+    printf("Searching for %s\n", name->c_str());
     if (parent_module == NULL) {
+        printf("PARENT MODULE IS NULL\n");
         path_list = getSysPath();
+
         if (path_list == NULL || path_list->cls != list_cls) {
             raiseExcHelper(RuntimeError, "sys.path must be a list of directory names");
         }
     } else {
+        printf("PARENT MODULE IS NOT NULL\n");
         path_list = static_cast<BoxedList*>(parent_module->getattr("__path__", NULL));
         if (path_list == NULL || path_list->cls != list_cls) {
             raiseExcHelper(ImportError, "No module named %s", name->c_str());
@@ -58,22 +73,40 @@ static Box* importSub(const std::string* name, Box* parent_module) {
         if (_p->cls != str_cls)
             continue;
         BoxedString* p = static_cast<BoxedString*>(_p);
+        std::string pstr(p->s);
+        printf("pstr: %s\n", pstr.c_str());
+        std::string fn;
+        bool exists;
 
         joined_path.clear();
         llvm::sys::path::append(joined_path, p->s, *name + ".py");
-        std::string fn(joined_path.str());
+        fn = joined_path.str();
 
         if (VERBOSITY() >= 2)
             printf("Searching for %s at %s...\n", name->c_str(), fn.c_str());
 
-#if LLVMREV < 217625
-        bool exists;
-        llvm_error_code code = llvm::sys::fs::exists(joined_path.str(), exists);
-        assert(LLVM_SYS_FS_EXISTS_CODE_OKAY(code));
-#else
-        bool exists = llvm::sys::fs::exists(joined_path.str());
-#endif
+        exists = isFileExists(joined_path.str());
 
+        if (!exists) {
+            printf("File %s not found. Falling back to package importing...\n", fn.c_str());
+            if (VERBOSITY() >= 2)
+                printf("File %s not found. Falling back to package importing...\n", fn.c_str());
+
+            joined_path.clear();
+            llvm::sys::path::append(joined_path, p->s, *name);
+            appendToSysPath(joined_path.str());
+            joined_path.clear();
+            llvm::sys::path::append(joined_path, p->s, *name, "__init__.py");
+            fn = joined_path.str();
+            printf("Searching for %s at %s...\n", name->c_str(), fn.c_str());
+
+            if (VERBOSITY() >= 2)
+                printf("Searching for %s at %s...\n", name->c_str(), fn.c_str());
+
+            exists = isFileExists(joined_path.str());
+        }
+
+        printf("Searching for %s at %s...\n", name->c_str(), fn.c_str());
         if (!exists)
             continue;
 
